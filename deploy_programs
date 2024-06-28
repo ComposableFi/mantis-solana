@@ -9,9 +9,9 @@ cargo b --release --bin solana
 
 ./target/release/solana airdrop -ul 1000 $WALLET_LOCATION
 
-(cd jito-programs/tip-payment && anchor build)
+(cd jito-programs/mev-programs/dev/tip-payment && anchor build)
 
 # NOTE: make sure the declare_id! is set correctly in the programs
 # Also, || true to make sure if fails the first time around, tip_payment can still be deployed
-RUST_INFO=trace ./target/release/solana deploy --keypair $WALLET_LOCATION -ul ./jito-programs/tip-payment/target/deploy/tip_distribution.so ./jito-programs/tip-payment/dev/dev_tip_distribution.json || true
-RUST_INFO=trace ./target/release/solana deploy --keypair $WALLET_LOCATION -ul ./jito-programs/tip-payment/target/deploy/tip_payment.so  ./jito-programs/tip-payment/dev/dev_tip_payment.json
+RUST_INFO=trace ./target/release/solana program deploy --keypair $WALLET_LOCATION -ul ./jito_tip_distribution-0.1.4.so --program-id ./jito-programs/mev-programs/dev/dev_tip_distribution.json || true
+RUST_INFO=trace ./target/release/solana program deploy --keypair $WALLET_LOCATION -ul ./jito_tip_payment-0.1.4.so --program-id ./jito-programs/mev-programs/dev/dev_tip_payment.json

@@ -6181,6 +6181,8 @@ dependencies = [
  "solana-vote",
  "solana-vote-program",
  "solana-wen-restart",
+ "spl-associated-token-account",
+ "spl-token",
  "static_assertions",
  "strum",
  "strum_macros",

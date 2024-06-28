@@ -1326,6 +1326,17 @@ impl BundleStorage {
                         // Tip errors are _typically_ due to misconfiguration (except for poh record error, bank processing error, exceeds cost model)
                         // in order to prevent buffering too many bundles, we'll just drop the bundle
                     }
+                    Err(BundleExecutionError::EmptyBundle) => {
+                        // empty bundles are irrecoverable due to malformed transactions
+                        debug!("bundle={} empty bundle", sanitized_bundle.bundle_id);
+                    }
+                    Err(BundleExecutionError::NoInstructionsInFirstTransaction) => {
+                        // empty bundles are irrecoverable due to malformed transactions
+                        debug!(
+                            "bundle={} no instructions in first transaction",
+                            sanitized_bundle.bundle_id
+                        );
+                    }
                     Err(BundleExecutionError::LockError) => {
                         // lock errors are irrecoverable due to malformed transactions
                         debug!("bundle={} lock error", sanitized_bundle.bundle_id);

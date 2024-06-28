@@ -90,6 +90,8 @@ thiserror = { workspace = true }
 tokio = { workspace = true, features = ["full"] }
 tonic = { workspace = true }
 trees = { workspace = true }
+spl-token = { workspace = true, features = ["no-entrypoint"] }
+spl-associated-token-account = { workspace = true, features = ["no-entrypoint"] }
 
 [dev-dependencies]
 assert_matches = { workspace = true }

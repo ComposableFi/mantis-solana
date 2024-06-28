@@ -93,6 +93,7 @@ impl From<BundleExecutionError> for RpcBundleExecutionError {
             BundleExecutionError::LockError => Self::BundleLockError,
             BundleExecutionError::PohRecordError(e) => Self::PohRecordError(e.to_string()),
             BundleExecutionError::TipError(e) => Self::TipError(e.to_string()),
+            BundleExecutionError::NoInstructionsInFirstTransaction | BundleExecutionError::EmptyBundle => Self::TipError(bundle_execution_error.to_string()),
         }
     }
 }
@@ -119,7 +120,7 @@ pub struct RpcSimulateBundleTransactionResult {
 #[serde(rename_all = "camelCase")]
 pub struct RpcSimulateBundleConfig {
     /// Gives the state of accounts pre/post transaction execution.
-    /// The length of each of these must be equal to the number transactions.   
+    /// The length of each of these must be equal to the number transactions.
     pub pre_execution_accounts_configs: Vec<Option<RpcSimulateTransactionAccountsConfig>>,
     pub post_execution_accounts_configs: Vec<Option<RpcSimulateTransactionAccountsConfig>>,
 

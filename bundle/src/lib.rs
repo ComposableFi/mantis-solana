@@ -25,6 +25,9 @@ pub enum TipError {
 
     #[error("Error cranking tip programs")]
     CrankTipError,
+
+    #[error("{0}")]
+    Custom(String),
 }
 
 impl From<anchor_lang::error::Error> for TipError {
@@ -57,4 +60,10 @@ pub enum BundleExecutionError {
 
     #[error("Tip payment error {0}")]
     TipError(#[from] TipError),
+
+    #[error("Empty bundle")]
+    EmptyBundle,
+
+    #[error("No instructions in first transaction")]
+    NoInstructionsInFirstTransaction,
 }

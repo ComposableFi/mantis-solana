@@ -249,7 +249,7 @@ impl BundleStageStatsMetricsTracker {
                         1
                     );
                 }
-                Err(BundleExecutionError::TipError(_)) => {
+                Err(BundleExecutionError::EmptyBundle | BundleExecutionError::NoInstructionsInFirstTransaction | BundleExecutionError::TipError(_)) => {
                     saturating_add_assign!(bundle_stage_metrics.execution_results_tip_errors, 1);
                 }
                 Err(BundleExecutionError::TransactionFailure(

@@ -206,8 +206,29 @@ impl BlockEngineStage {
         // Get a copy of configs here in case they have changed at runtime
         let keypair = cluster_info.keypair().clone();
 
+        let mut backend_auth_endpoint =
+            Endpoint::from_shared(format!("{}:1005", local_block_engine_config.block_engine_url))
+                .map_err(|_| {
+                    ProxyError::BlockEngineConnectionError(format!(
+                        "invalid block engine url value: {}",
+                        local_block_engine_config.block_engine_url
+                    ))
+                })?
+                .tcp_keepalive(Some(Duration::from_secs(60)));
+        if local_block_engine_config
+            .block_engine_url
+            .starts_with("https")
+        {
+            backend_auth_endpoint = backend_auth_endpoint
+                .tls_config(tonic::transport::ClientTlsConfig::new())
+                .map_err(|_| {
+                    ProxyError::BlockEngineConnectionError(
+                        "failed to set tls_config for block engine service".to_string(),
+                    )
+                })?;
+        }
         let mut backend_endpoint =
-            Endpoint::from_shared(local_block_engine_config.block_engine_url.clone())
+            Endpoint::from_shared(format!("{}:1003", local_block_engine_config.block_engine_url))
                 .map_err(|_| {
                     ProxyError::BlockEngineConnectionError(format!(
                         "invalid block engine url value: {}",
@@ -228,18 +249,18 @@ impl BlockEngineStage {
                 })?;
         }
 
-        debug!(
+        info!(
             "connecting to auth: {}",
             local_block_engine_config.block_engine_url
         );
-        let auth_channel = timeout(*connection_timeout, backend_endpoint.connect())
+        let auth_channel = timeout(*connection_timeout, backend_auth_endpoint.connect())
             .await
             .map_err(|_| ProxyError::AuthenticationConnectionTimeout)?
             .map_err(|e| ProxyError::AuthenticationConnectionError(e.to_string()))?;
 
         let mut auth_client = AuthServiceClient::new(auth_channel);
 
-        debug!("generating authentication token");
+        info!("generating authentication token");
         let (access_token, refresh_token) = timeout(
             *connection_timeout,
             generate_auth_tokens(&mut auth_client, &keypair),
@@ -253,7 +274,7 @@ impl BlockEngineStage {
             ("count", 1, i64),
         );
 
-        debug!(
+        info!(
             "connecting to block engine: {}",
             local_block_engine_config.block_engine_url
         );

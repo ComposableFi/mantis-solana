@@ -139,6 +139,9 @@ while [[ -n $1 ]]; do
     elif [[ $1 == --trust-block-engine-packets ]]; then
       args+=("$1")
       shift
+    elif [[ $1 == --expected-shred-version ]]; then
+      args+=("$1" "$2")
+      shift 2
     else
       echo "Unknown argument: $1"
       $program --help

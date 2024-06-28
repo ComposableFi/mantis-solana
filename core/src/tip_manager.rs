@@ -1,3 +1,9 @@
+use jito_tip_payment::TOKENS_TIP_ACCOUNT_SEED_0;
+use solana_sdk::program_pack::Pack;
+use solana_sdk::signer::SeedDerivable;
+use solana_sdk::system_instruction;
+use spl_associated_token_account::get_associated_token_address;
+use spl_token::instruction::{initialize_account, initialize_mint, mint_to};
 use {
     crate::proxy::block_engine_stage::BlockBuilderFeeInfo,
     anchor_lang::{
@@ -482,6 +488,99 @@ impl TipManager {
                 }))
             })
             .collect()
+    }
+
+    pub fn get_initialize_token_tip_accounts(
+        &self,
+        bank: &Bank,
+        keypair: &Keypair,
+    ) -> Option<SanitizedBundle> {
+        let maybe_init_tokens_tip_account_tx = if self.should_initialize_tip_payment_program(bank) {
+            debug!("should_initialize_tokens_tip_account=true");
+            // Some(self.initialize_tokens_tip_account_tx(bank.last_blockhash(), keypair))
+            let recent_blockhash = bank.last_blockhash();
+
+            let owner_pubkey = &keypair.pubkey();
+            // TODO: move the PK to a config
+            let mint_keypair = &Keypair::from_seed(&[43; 32]).unwrap();
+            let associated_token_addr =
+                get_associated_token_address(&owner_pubkey, &mint_keypair.pubkey());
+
+            let init_mint_tx = {
+                let decimals = 0;
+                let signers = vec![keypair, mint_keypair];
+                let lamports =
+                    bank.get_minimum_balance_for_rent_exemption(spl_token::state::Mint::LEN);
+
+                let create_mint_account_instruction = system_instruction::create_account(
+                    &keypair.pubkey(),
+                    &mint_keypair.pubkey(),
+                    lamports,
+                    spl_token::state::Mint::LEN as u64,
+                    &spl_token::ID,
+                );
+                let initialize_mint_instruction = initialize_mint(
+                    &spl_token::ID,
+                    &mint_keypair.pubkey(),
+                    owner_pubkey,
+                    None,
+                    decimals,
+                )
+                .unwrap();
+
+                let create_token_acc_ix =
+                    spl_associated_token_account::instruction::create_associated_token_account(
+                        &owner_pubkey,
+                        &owner_pubkey,
+                        &mint_keypair.pubkey(),
+                        &spl_token::ID,
+                    );
+
+                let mint_ix = mint_to(
+                    &spl_token::ID,
+                    &mint_keypair.pubkey(),
+                    &associated_token_addr,
+                    &owner_pubkey,
+                    &[&owner_pubkey],
+                    1_000_000_000_000,
+                )
+                .unwrap();
+
+                let instructions = vec![
+                    create_mint_account_instruction,
+                    initialize_mint_instruction,
+                    create_token_acc_ix,
+                    mint_ix,
+                ];
+
+                let tx = Transaction::new_signed_with_payer(
+                    &instructions,
+                    Some(&keypair.pubkey()),
+                    &signers,
+                    recent_blockhash,
+                );
+
+                SanitizedTransaction::try_from_legacy_transaction(tx).unwrap()
+            };
+            Some(init_mint_tx)
+        } else {
+            None
+        };
+
+        let transactions = [maybe_init_tokens_tip_account_tx]
+            .into_iter()
+            .flatten()
+            .collect::<Vec<SanitizedTransaction>>();
+
+        if transactions.is_empty() {
+            None
+        } else {
+            let bundle_id = derive_bundle_id_from_sanitized_transactions(&transactions);
+            Some(SanitizedBundle {
+                transactions,
+                bundle_id,
+            })
+        }
     }
 
     /// Return a bundle that is capable of calling the initialize instructions on the two tip payment programs
