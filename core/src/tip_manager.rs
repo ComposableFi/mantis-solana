@@ -1,4 +1,3 @@
-use jito_tip_payment::TOKENS_TIP_ACCOUNT_SEED_0;
 use solana_sdk::program_pack::Pack;
 use solana_sdk::signer::SeedDerivable;
 use solana_sdk::system_instruction;
