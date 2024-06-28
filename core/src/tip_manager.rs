@@ -494,16 +494,17 @@ impl TipManager {
         bank: &Bank,
         keypair: &Keypair,
     ) -> Option<SanitizedBundle> {
-        let maybe_init_tokens_tip_account_tx = if self.should_initialize_tip_payment_program(bank) {
+        let owner_pubkey = &keypair.pubkey();
+        // TODO: move the PK to a config
+        let mint_keypair = &Keypair::from_seed(&[43; 32]).unwrap();
+        let associated_token_addr =
+            get_associated_token_address(&owner_pubkey, &mint_keypair.pubkey());
+
+        let maybe_init_tokens_tip_account_tx = if bank.get_account(&associated_token_addr).is_none()
+        {
             debug!("should_initialize_tokens_tip_account=true");
             // Some(self.initialize_tokens_tip_account_tx(bank.last_blockhash(), keypair))
             let recent_blockhash = bank.last_blockhash();
-
-            let owner_pubkey = &keypair.pubkey();
-            // TODO: move the PK to a config
-            let mint_keypair = &Keypair::from_seed(&[43; 32]).unwrap();
-            let associated_token_addr =
-                get_associated_token_address(&owner_pubkey, &mint_keypair.pubkey());
 
             let init_mint_tx = {
                 let decimals = 0;

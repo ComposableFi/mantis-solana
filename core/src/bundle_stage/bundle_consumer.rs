@@ -434,12 +434,8 @@ impl BundleConsumer {
         // this code should never run.
         let keypair = cluster_info.keypair().clone();
         let initialize_tip_programs_bundle =
-            tip_manager.get_initialize_tip_programs_bundle(&bank_start.working_bank, &keypair);
-        if let Some(_bundle) = initialize_tip_programs_bundle {
-            let bundle = tip_manager
-                .get_initialize_token_tip_accounts(&bank_start.working_bank, &keypair)
-                .unwrap();
-
+            tip_manager.get_initialize_token_tip_accounts(&bank_start.working_bank, &keypair);
+        if let Some(bundle) = initialize_tip_programs_bundle {
             debug!(
                 "initializing tip programs with {} transactions, bundle id: {}",
                 bundle.transactions.len(),

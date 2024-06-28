@@ -18,6 +18,11 @@ cargo b --release
 ./bootstrap
 ```
 
+If you have an error like
+```Failed to start validator: "shred version mismatch: expected 50300 found: 24866"```,
+you need to go to open the script and change `--expected-shred-version` parameter to the correct value (`24866` in this
+case).
+
 4. Deploy programs
 
 ```bash
