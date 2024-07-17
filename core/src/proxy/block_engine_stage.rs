@@ -206,15 +206,17 @@ impl BlockEngineStage {
         // Get a copy of configs here in case they have changed at runtime
         let keypair = cluster_info.keypair().clone();
 
-        let mut backend_auth_endpoint =
-            Endpoint::from_shared(format!("{}:1005", local_block_engine_config.block_engine_url))
-                .map_err(|_| {
-                    ProxyError::BlockEngineConnectionError(format!(
-                        "invalid block engine url value: {}",
-                        local_block_engine_config.block_engine_url
-                    ))
-                })?
-                .tcp_keepalive(Some(Duration::from_secs(60)));
+        let mut backend_auth_endpoint = Endpoint::from_shared(format!(
+            "{}:1005",
+            local_block_engine_config.block_engine_url
+        ))
+        .map_err(|_| {
+            ProxyError::BlockEngineConnectionError(format!(
+                "invalid block engine url value: {}",
+                local_block_engine_config.block_engine_url
+            ))
+        })?
+        .tcp_keepalive(Some(Duration::from_secs(60)));
         if local_block_engine_config
             .block_engine_url
             .starts_with("https")
@@ -227,15 +229,17 @@ impl BlockEngineStage {
                     )
                 })?;
         }
-        let mut backend_endpoint =
-            Endpoint::from_shared(format!("{}:1003", local_block_engine_config.block_engine_url))
-                .map_err(|_| {
-                    ProxyError::BlockEngineConnectionError(format!(
-                        "invalid block engine url value: {}",
-                        local_block_engine_config.block_engine_url
-                    ))
-                })?
-                .tcp_keepalive(Some(Duration::from_secs(60)));
+        let mut backend_endpoint = Endpoint::from_shared(format!(
+            "{}:1003",
+            local_block_engine_config.block_engine_url
+        ))
+        .map_err(|_| {
+            ProxyError::BlockEngineConnectionError(format!(
+                "invalid block engine url value: {}",
+                local_block_engine_config.block_engine_url
+            ))
+        })?
+        .tcp_keepalive(Some(Duration::from_secs(60)));
         if local_block_engine_config
             .block_engine_url
             .starts_with("https")
