@@ -638,7 +638,10 @@ fn main() -> Result<(), Box<dyn error::Error>> {
             genesis_config.add_account(
                 address,
                 AccountSharedData::from(Account {
-                    lamports: genesis_config.rent.minimum_balance(program_data.len()),
+                    lamports: genesis_config
+                        .rent
+                        .minimum_balance(program_data.len())
+                        .max(1),
                     data: program_data,
                     executable: true,
                     owner: loader,
@@ -712,7 +715,6 @@ fn main() -> Result<(), Box<dyn error::Error>> {
         LedgerColumnOptions::default(),
     )?;
 
-    println!("{genesis_config}");
     Ok(())
 }
 
