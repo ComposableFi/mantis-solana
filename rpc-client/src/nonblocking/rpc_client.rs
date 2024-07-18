@@ -32,6 +32,7 @@ use {
         parse_token::{TokenAccountType, UiTokenAccount, UiTokenAmount},
         UiAccount, UiAccountData, UiAccountEncoding,
     },
+    solana_ledger::shred::Shred,
     solana_rpc_client_api::{
         bundles::{
             RpcBundleRequest, RpcSimulateBundleConfig, RpcSimulateBundleResult,
@@ -58,6 +59,7 @@ use {
         signature::Signature,
         transaction::{self, VersionedTransaction},
     },
+    solana_transaction_status::BlockHeader,
     solana_transaction_status::{
         EncodedConfirmedBlock, EncodedConfirmedTransactionWithStatusMeta, TransactionStatus,
         UiConfirmedBlock, UiTransactionEncoding,
@@ -2634,6 +2636,30 @@ impl RpcClient {
         self.send(
             self.maybe_map_request(RpcRequest::GetBlock).await?,
             json!([slot, encoding]),
+        )
+        .await
+    }
+
+    pub async fn get_block_headers(
+        &self,
+        slot: Slot,
+        encoding: UiTransactionEncoding,
+    ) -> ClientResult<BlockHeader> {
+        self.send(
+            self.maybe_map_request(RpcRequest::GetBlockHeaders).await?,
+            json!([slot, encoding]),
+        )
+        .await
+    }
+
+    pub async fn get_shreds(
+        &self,
+        slot: Slot,
+        shred_indices: Vec<u64>,
+    ) -> ClientResult<Vec<Option<Shred>>> {
+        self.send(
+            self.maybe_map_request(RpcRequest::GetShreds).await?,
+            json!([slot, shred_indices]),
         )
         .await
     }

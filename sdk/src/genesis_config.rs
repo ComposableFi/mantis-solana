@@ -295,7 +295,7 @@ impl fmt::Display for GenesisConfig {
             lamports_to_sol(
                 self.accounts
                     .iter()
-                    .map(|(pubkey, account)| {
+                    .map(|(_pubkey, account)| {
                         // assert!(account.lamports > 0, "{:?}", (pubkey, account));
                         account.lamports
                     })

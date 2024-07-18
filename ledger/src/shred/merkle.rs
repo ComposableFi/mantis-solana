@@ -1,3 +1,5 @@
+use serde::{Deserialize, Serialize};
+
 #[cfg(test)]
 use crate::shred::ShredType;
 use {
@@ -57,7 +59,7 @@ type MerkleProofEntry = [u8; 20];
 // The slice past signature till the end of the data buffer is erasure coded.
 // The slice past signature and before the merkle proof is hashed to generate
 // the Merkle tree. The root of the Merkle tree is signed.
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
 pub struct ShredData {
     common_header: ShredCommonHeader,
     data_header: DataShredHeader,
@@ -70,7 +72,7 @@ pub struct ShredData {
 //     | [Retransmitter's signature if resigned]
 // The slice past signature and before the merkle proof is hashed to generate
 // the Merkle tree. The root of the Merkle tree is signed.
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
 pub struct ShredCode {
     common_header: ShredCommonHeader,
     coding_header: CodingShredHeader,
