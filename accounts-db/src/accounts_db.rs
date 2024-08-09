@@ -17729,3 +17729,36 @@ pub mod tests {
         AccountsHasher::compute_merkle_root_recurse(hashes, MERKLE_FANOUT)
     }
 }
+
+
+/// Tests result of account hashing.
+///
+/// The main purpose of this test is so that we can have the same test in
+/// emulated-light-client repository to verify our hashing implementation there.
+#[test]
+fn test_hash_account() {
+    const LAMPORTS: u64 = 420;
+    const DATA: [u8; 40] = [
+        0xa9, 0x1e, 0x26, 0xed, 0x91, 0x28, 0xdd, 0x6f, 0xed, 0xa2, 0xe8, 0x6a,
+        0xf7, 0x9b, 0xe2, 0xe1, 0x77, 0x89, 0xaf, 0x08, 0x72, 0x08, 0x69, 0x22,
+        0x13, 0xd3, 0x95, 0x5e, 0x07, 0x4c, 0xee, 0x9c, 1, 2, 3, 4, 5, 6, 7, 8,
+    ];
+    const WANT: [u8; 32] = [
+        49, 143, 86, 41, 111, 233, 82, 217, 178, 173, 147, 236, 54, 75, 79,
+        140, 150, 246, 212, 75, 8, 179, 104, 176, 158, 200, 100, 1, 148, 23,
+        18, 17,
+    ];
+
+    let key = "ENEWG4MWwJQUfJxDgqarJQ1bf2P4fADsCYsPCjvLRaa2".parse().unwrap();
+    let owner = "4FjVmuvPYnE1fqBtvjGh5JF7QDwUmyBZ5wv1uygHvTey".parse().unwrap();
+
+    let got = AccountsDb::hash_account_data(
+        LAMPORTS,
+        &owner,
+        false,
+        u64::MAX,
+        &DATA,
+        &key
+    ).0.to_bytes();
+    assert_eq!(WANT, got);
+}
