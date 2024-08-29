@@ -41,7 +41,7 @@ args=(
                         "$SOLANA_CONFIG_DIR"/bootstrap-validator/stake-account.json
 )
 
-"$SOLANA_ROOT"/fetch-spl.sh
+"$SOLANA_ROOT"/fetch-spl-rollup.sh
 if [[ -r spl-genesis-args.sh ]]; then
   SPL_GENESIS_ARGS=$(cat "$SOLANA_ROOT"/spl-genesis-args.sh)
   #shellcheck disable=SC2207
