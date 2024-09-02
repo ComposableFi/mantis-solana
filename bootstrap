@@ -24,4 +24,6 @@ RUST_LOG=INFO,solana_core::bundle_stage=DEBUG \
   --shred-receiver-address 127.0.0.1:1002 \
   --trust-relayer-packets \
   --trust-block-engine-packets \
-  --expected-shred-version 24866
+  --limit-ledger-size 100000000 \
+  --enable-extended-tx-metadata-storage \
+  --expected-shred-version 49326
