@@ -77,12 +77,12 @@ fetch_program() {
 MANTIS_SPL_VERSION=0.1.0
 
 # Token program is made upgradeable since it has rebasing logic.
-fetch_program token 0.1.0 TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA BPFLoaderUpgradeab1e11111111111111111111111 rollup
-fetch_program token_2022 0.1.0 TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb BPFLoaderUpgradeab1e11111111111111111111111 rollup
-fetch_program memo 0.1.0 Memo1UhkJRfHyvLMcVucJwxXeuD728EqVDDwQDxFMNo BPFLoader1111111111111111111111111111111111 rollup
-fetch_program memo 0.1.0 MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr BPFLoader2111111111111111111111111111111111 rollup
-fetch_program associated_token_account 0.1.0 ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL BPFLoader2111111111111111111111111111111111 rollup
-fetch_program feature_proposal 0.1.0 Feat1YXHhH6t1juaWF74WLcfv4XoNocjXA6sPWHNgAse BPFLoader2111111111111111111111111111111111 rollup
+fetch_program token $MANTIS_SPL_VERSION TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA BPFLoaderUpgradeab1e11111111111111111111111 rollup
+fetch_program token_2022 $MANTIS_SPL_VERSION TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb BPFLoaderUpgradeab1e11111111111111111111111 rollup
+fetch_program memo $MANTIS_SPL_VERSION Memo1UhkJRfHyvLMcVucJwxXeuD728EqVDDwQDxFMNo BPFLoader1111111111111111111111111111111111 rollup
+fetch_program memo $MANTIS_SPL_VERSION MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr BPFLoader2111111111111111111111111111111111 rollup
+fetch_program associated_token_account $MANTIS_SPL_VERSION ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL BPFLoader2111111111111111111111111111111111 rollup
+fetch_program feature_proposal $MANTIS_SPL_VERSION Feat1YXHhH6t1juaWF74WLcfv4XoNocjXA6sPWHNgAse BPFLoader2111111111111111111111111111111111 rollup
 # jito programs
 fetch_program jito_tip_payment 0.1.4 T1pyyaTNZsKv2WcRAB8oVnk93mLJw2XzjtVYqCsaHqt BPFLoaderUpgradeab1e11111111111111111111111 jito
 fetch_program jito_tip_distribution 0.1.4 4R3gSG8BpU4t19KYj8CfnbtRpnT8gtk4dvTHxVRwc2r7 BPFLoaderUpgradeab1e11111111111111111111111 jito
@@ -92,7 +92,7 @@ echo "${genesis_args[@]}" > spl-genesis-args.sh
 echo
 echo "Available SPL programs:"
 ls -l spl_*.so
-ls -l $PROGRAMS_PATH/*.so
+ls -l $PROGRAMS_PATH/*.so || true
 
 echo "Available Jito programs:"
 ls -l jito*.so
