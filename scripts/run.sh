@@ -73,6 +73,10 @@ else
   if [[ -r spl-genesis-args.sh ]]; then
     SPL_GENESIS_ARGS=$(cat spl-genesis-args.sh)
   fi
+ ./fetch-metaplex.sh
+  if [[ -r metaplex-genesis-args.sh ]]; then
+    METAPLEX_GENESIS_ARGS=$(cat metaplex-genesis-args.sh)
+  fi 
 
   # shellcheck disable=SC2086
   solana-genesis \
@@ -85,6 +89,7 @@ else
     --ledger "$ledgerDir" \
     --cluster-type "$SOLANA_RUN_SH_CLUSTER_TYPE" \
     $SPL_GENESIS_ARGS \
+    $METAPLEX_GENESIS_ARGS \
     $SOLANA_RUN_SH_GENESIS_ARGS
 fi
 
