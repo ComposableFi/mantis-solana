@@ -5235,6 +5235,7 @@ pub fn populate_blockstore_for_tests(
 
 #[cfg(test)]
 pub mod tests {
+    use spl_token_2022::extension::BaseStateWithExtensionsMut;
     use {
         super::{
             rpc_accounts::*, rpc_accounts_scan::*, rpc_bank::*, rpc_deprecated_v1_9::*,
