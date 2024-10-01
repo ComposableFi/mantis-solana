@@ -26,4 +26,5 @@ RUST_LOG=INFO,solana_core::bundle_stage=DEBUG \
   --trust-block-engine-packets \
   --limit-ledger-size 100000000 \
   --enable-extended-tx-metadata-storage \
-  --expected-shred-version 49326
+  --geyser-plugin-config geyser-config.json \
+  --expected-shred-version 6362

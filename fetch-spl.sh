@@ -33,7 +33,7 @@ fetch_program() {
     url="https://github.com/ComposableFi/solana-program-library/releases/download/v$version/$so_name"
     ;;
   "path")
-    so="spl_${name//-/_}.so"
+    so="${name//-/_}.so"
     programs_path=$6
     if [[ ! -d $programs_path ]]; then
       echo "Invalid programs path: $programs_path"
@@ -83,6 +83,7 @@ fetch_program memo $MANTIS_SPL_VERSION Memo1UhkJRfHyvLMcVucJwxXeuD728EqVDDwQDxFM
 fetch_program memo $MANTIS_SPL_VERSION MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr BPFLoader2111111111111111111111111111111111 rollup
 fetch_program associated_token_account $MANTIS_SPL_VERSION ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL BPFLoader2111111111111111111111111111111111 rollup
 fetch_program feature_proposal $MANTIS_SPL_VERSION Feat1YXHhH6t1juaWF74WLcfv4XoNocjXA6sPWHNgAse BPFLoader2111111111111111111111111111111111 rollup
+fetch_program wittrie "0.0.0" 8Czzh5DFpFAN69Qow3gvpqS4APJyTFpqZR7cJhwphqPE BPFLoader2111111111111111111111111111111111 path ../emulated-light-client/target/deploy
 # jito programs
 fetch_program jito_tip_payment 0.1.4 T1pyyaTNZsKv2WcRAB8oVnk93mLJw2XzjtVYqCsaHqt BPFLoaderUpgradeab1e11111111111111111111111 jito
 fetch_program jito_tip_distribution 0.1.4 4R3gSG8BpU4t19KYj8CfnbtRpnT8gtk4dvTHxVRwc2r7 BPFLoaderUpgradeab1e11111111111111111111111 jito
