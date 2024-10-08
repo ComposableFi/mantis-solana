@@ -214,7 +214,7 @@ fn main() {
             upgradeable_programs_to_load.push(UpgradeableProgramInfo {
                 program_id: address,
                 loader: solana_sdk::bpf_loader_upgradeable::id(),
-                upgrade_authority: Pubkey::from_str("D3XyRezYWhv68iyUtaXytcMur6MNWnbeXuieqNTC9LH3")
+                upgrade_authority: Pubkey::from_str("4k7Gu9QSJd5A7KhtB6aKr3rTJ67xBnZUkFiKCe8DFuM4")
                     .unwrap(),
                 program_path,
             });
