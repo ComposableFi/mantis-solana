@@ -1,0 +1,6 @@
+{
+  "libpath": "../emulated-light-client/solana/trie-geyser-plugin/target/release/libwitnessed_trie_geyser_plugin.dylib",
+  "trie_program": "2HLLVco5HvwWriNbUhmVwA2pCetRkpgrqwnjcsZdyTKT",
+  "root_account": "A4H1QgWU1YbgmZ5mr9zm31ss6TaVyyBqqhSnYW3xgdYm",
+  "bind_address": "0.0.0.0:42069"
+}

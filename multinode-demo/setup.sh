@@ -49,6 +49,14 @@ if [[ -r spl-genesis-args.sh ]]; then
   args+=($SPL_GENESIS_ARGS)
 fi
 
+"$SOLANA_ROOT"/fetch-metaplex.sh
+if [[ -r metaplex-genesis-args.sh ]]; then
+  METAPLEX_GENESIS_ARGS=$(cat "$SOLANA_ROOT"/metaplex-genesis-args.sh)
+  #shellcheck disable=SC2207
+  #shellcheck disable=SC2206
+  args+=($METAPLEX_GENESIS_ARGS)
+fi
+
 default_arg --ledger "$SOLANA_CONFIG_DIR"/bootstrap-validator
 default_arg --faucet-pubkey "$SOLANA_CONFIG_DIR"/faucet.json
 default_arg --faucet-lamports 500000000000000000

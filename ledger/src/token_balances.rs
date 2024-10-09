@@ -133,6 +133,7 @@ fn collect_token_balance_from_account(
 
 #[cfg(test)]
 mod test {
+    use spl_token_2022::extension::BaseStateWithExtensionsMut;
     use {
         super::*,
         solana_sdk::{account::Account, genesis_config::create_genesis_config},

@@ -6,6 +6,7 @@ use {
         CodingShredHeader, Error, ShredCommonHeader, ShredType, SignedData,
         DATA_SHREDS_PER_FEC_BLOCK, MAX_DATA_SHREDS_PER_SLOT, SIZE_OF_NONCE,
     },
+    serde::{Deserialize, Serialize},
     solana_sdk::{clock::Slot, hash::Hash, packet::PACKET_DATA_SIZE, signature::Signature},
     static_assertions::const_assert_eq,
 };
@@ -15,7 +16,7 @@ pub const MAX_CODE_SHREDS_PER_SLOT: usize = MAX_DATA_SHREDS_PER_SLOT;
 
 const_assert_eq!(ShredCode::SIZE_OF_PAYLOAD, 1228);
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
 pub enum ShredCode {
     Legacy(legacy::ShredCode),
     Merkle(merkle::ShredCode),

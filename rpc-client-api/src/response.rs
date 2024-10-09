@@ -55,6 +55,14 @@ pub struct BatchRpcResponseContext {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub api_version: Option<RpcApiVersion>,
 }
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct LiteRpcResponseContext {
+    pub slot: Slot,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub api_version: Option<RpcApiVersion>,
+    pub sampled: bool,
+}
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct RpcApiVersion(semver::Version);
@@ -111,6 +119,11 @@ pub struct BatchResponse<T> {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Response<T> {
     pub context: RpcResponseContext,
+    pub value: T,
+}
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct LiteResponse<T> {
+    pub context: LiteRpcResponseContext,
     pub value: T,
 }
 
@@ -281,6 +294,12 @@ impl SlotUpdate {
 pub enum RpcSignatureResult {
     ProcessedSignature(ProcessedSignatureResult),
     ReceivedSignature(ReceivedSignatureResult),
+}
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct GetShredResponse {
+    pub shreds: Vec<Option<solana_ledger::shred::Shred>>,
+    pub leader: String,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]

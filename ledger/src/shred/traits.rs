@@ -3,7 +3,7 @@ use {
     solana_sdk::{clock::Slot, signature::Signature},
 };
 
-pub(super) trait Shred<'a>: Sized {
+pub trait Shred<'a>: Sized {
     // Total size of payload including headers, merkle
     // branches (if any), zero paddings, etc.
     const SIZE_OF_PAYLOAD: usize;

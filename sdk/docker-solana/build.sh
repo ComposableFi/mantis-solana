@@ -24,9 +24,11 @@ rm -rf usr/
 
 cp -f ../../scripts/run.sh usr/bin/solana-run.sh
 cp -f ../../fetch-spl.sh usr/bin/
+cp -f ../../fetch-metaplex.sh usr/bin/
 (
   cd usr/bin
   ./fetch-spl.sh
+  ./fetch-metaplex.sh
 )
 
 docker build -t solanalabs/solana:"$CHANNEL_OR_TAG" .
