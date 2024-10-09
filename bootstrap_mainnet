@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+set -eu
+
+BANK_HASH=$(cargo run --release --bin solana-ledger-tool -- -l /mnt/ledger bank-hash)
+
+# increase max file handle limit
+ulimit -Hn 1000000
+
+# if above fails, run:
+# sudo bash -c 'echo "*               hard    nofile          1000000" >> /etc/security/limits.conf'
+
+# NOTE: make sure tip-payment and tip-distribution program are deployed using the correct pubkeys
+#  --relayer-url http://127.0.0.1:11226 \
+RUST_LOG=INFO,solana_core::bundle_stage=DEBUG \
+  NDEBUG=1 ./multinode-demo/bootstrap-validator-mainnet.sh \
+  --wait-for-supermajority 0 \
+  --expected-bank-hash "$BANK_HASH" \
+  --rpc-pubsub-enable-block-subscription \
+  --enable-rpc-transaction-history \
+  --accounts /mnt/accounts \
+  --tip-payment-program-pubkey VKoeHPtSwCjT7BTiDPthiSUuz5LgpG2eUVp9apFH8Yy \
+  --tip-distribution-program-pubkey FD9k3t7HhDbpuhz6TKprwBW7S68zufyg8TnWhGVqwonk \
+  --commission-bps 0 \
+  --trust-relayer-packets \
+  --trust-block-engine-packets \
+  --limit-ledger-size 100000000 \
+  --enable-extended-tx-metadata-storage \
+  --log solana-validator.log \
+  --geyser-plugin-config geyser-config.json \
+  --expected-shred-version 28599
