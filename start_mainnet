@@ -5,4 +5,5 @@ SOLANA_CONFIG_DIR=/mnt/ledger
 
 mkdir -p $SOLANA_CONFIG_DIR
 NDEBUG=1 ./multinode-demo/setup-mainnet.sh
-cargo run --release --bin solana-ledger-tool -- -l /mnt/ledger/config/bootstrap-validator/ create-snapshot 0
+mv ./config/* $SOLANA_CONFIG_DIR/
+cargo run --release --bin solana-ledger-tool -- -l $SOLANA_CONFIG_DIR/bootstrap-validator/ create-snapshot 0
