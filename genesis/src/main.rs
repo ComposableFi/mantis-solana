@@ -1,6 +1,7 @@
 //! A command-line executable for generating the chain's genesis config.
 #![allow(clippy::arithmetic_side_effects)]
 
+use solana_accounts_db::inline_spl_token;
 use {
     base64::{prelude::BASE64_STANDARD, Engine},
     clap::{crate_description, crate_name, value_t, value_t_or_exit, App, Arg, ArgMatches},
@@ -455,8 +456,8 @@ fn main() -> Result<(), Box<dyn error::Error>> {
     let faucet_lamports = value_t!(matches, "faucet_lamports", u64).unwrap_or(0);
     let faucet_pubkey = pubkey_of(&matches, "faucet_pubkey");
 
-    let ticks_per_slot = value_t_or_exit!(matches, "ticks_per_slot", u64);
-    // let ticks_per_slot = 16; // 1024
+    // let ticks_per_slot = value_t_or_exit!(matches, "ticks_per_slot", u64);
+    let ticks_per_slot = 512; // 1024
 
     let mut fee_rate_governor = FeeRateGovernor::new(
         value_t_or_exit!(matches, "target_lamports_per_signature", u64),
@@ -706,6 +707,15 @@ fn main() -> Result<(), Box<dyn error::Error>> {
             );
         }
     }
+
+    let native_mint_account = solana_sdk::account::AccountSharedData::from(Account {
+        owner: inline_spl_token::id(),
+        data: inline_spl_token::native_mint::ACCOUNT_DATA.to_vec(),
+        lamports: sol_to_lamports(1.),
+        executable: false,
+        rent_epoch: 1,
+    });
+    genesis_config.add_account(inline_spl_token::native_mint::id(), native_mint_account);
 
     solana_logger::setup();
     create_new_ledger(
