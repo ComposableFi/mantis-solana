@@ -72,13 +72,12 @@ fetch_program() {
     mkdir -p ~/.cache/solana-spl
     cp "$so" ~/.cache/solana-spl/"$so"
   fi
-
 }
 
 MANTIS_SPL_VERSION=0.1.0
 
 # Token program is made upgradeable since it has rebasing logic.
-fetch_program spl_token $MANTIS_SPL_VERSION TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA BPFLoaderUpgradeab1e11111111111111111111111 path ../solana-program-library/target/deploy
+fetch_program spl_token 3.5.0 TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA BPFLoaderUpgradeab1e11111111111111111111111 path ../solana-program-library/target/deploy
 fetch_program token-2022 1.0.0 TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb BPFLoaderUpgradeab1e11111111111111111111111 solana
 fetch_program memo  1.0.0 Memo1UhkJRfHyvLMcVucJwxXeuD728EqVDDwQDxFMNo BPFLoader1111111111111111111111111111111111 solana
 fetch_program memo  3.0.0 MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr BPFLoader2111111111111111111111111111111111 solana
