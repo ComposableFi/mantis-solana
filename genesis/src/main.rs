@@ -457,7 +457,7 @@ fn main() -> Result<(), Box<dyn error::Error>> {
     let faucet_pubkey = pubkey_of(&matches, "faucet_pubkey");
 
     // let ticks_per_slot = value_t_or_exit!(matches, "ticks_per_slot", u64);
-    let ticks_per_slot = 512; // 1024
+    let ticks_per_slot = 64; // 1024
 
     let mut fee_rate_governor = FeeRateGovernor::new(
         value_t_or_exit!(matches, "target_lamports_per_signature", u64),
