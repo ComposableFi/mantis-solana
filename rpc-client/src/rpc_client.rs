@@ -27,6 +27,7 @@ use {
         parse_token::{UiTokenAccount, UiTokenAmount},
         UiAccount, UiAccountEncoding,
     },
+    solana_ledger::shred::Shred,
     solana_rpc_client_api::{
         bundles::{RpcSimulateBundleConfig, RpcSimulateBundleResult},
         client_error::{Error as ClientError, ErrorKind, Result as ClientResult},
@@ -49,6 +50,7 @@ use {
         signature::Signature,
         transaction::{self, uses_durable_nonce, Transaction, VersionedTransaction},
     },
+    solana_transaction_status::BlockHeader,
     solana_transaction_status::{
         EncodedConfirmedBlock, EncodedConfirmedTransactionWithStatusMeta, TransactionStatus,
         UiConfirmedBlock, UiTransactionEncoding,
@@ -2075,6 +2077,18 @@ impl RpcClient {
     /// ```
     pub fn get_block(&self, slot: Slot) -> ClientResult<EncodedConfirmedBlock> {
         self.invoke((self.rpc_client.as_ref()).get_block(slot))
+    }
+
+    pub fn get_block_headers(&self, slot: Slot) -> ClientResult<BlockHeader> {
+        self.invoke((self.rpc_client.as_ref()).get_block_headers(slot, UiTransactionEncoding::Json))
+    }
+
+    pub fn get_shreds(
+        &self,
+        slot: Slot,
+        shred_indices: Vec<u64>,
+    ) -> ClientResult<Vec<Option<Shred>>> {
+        self.invoke((self.rpc_client.as_ref()).get_shreds(slot, shred_indices))
     }
 
     /// Returns identity and transaction information about a confirmed block in the ledger.

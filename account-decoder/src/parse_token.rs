@@ -287,6 +287,7 @@ pub fn get_token_account_mint(data: &[u8]) -> Option<Pubkey> {
 
 #[cfg(test)]
 mod test {
+    use spl_token_2022::extension::BaseStateWithExtensionsMut;
     use {
         super::*,
         crate::parse_token_extension::{UiMemoTransfer, UiMintCloseAuthority},
