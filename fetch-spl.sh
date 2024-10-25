@@ -7,7 +7,7 @@
 set -e
 
 upgradeableLoader=BPFLoaderUpgradeab1e11111111111111111111111
-upgradeAuthority="4k7Gu9QSJd5A7KhtB6aKr3rTJ67xBnZUkFiKCe8DFuM4"
+upgradeAuthority="9jXmF189CdSe9uG7ur5k8yvkkWYZQaVPwZPL5P1znMC6"
 PROGRAMS_PATH=../solana-program-library/target/deploy
 
 fetch_program() {
