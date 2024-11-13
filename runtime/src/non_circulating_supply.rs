@@ -195,6 +195,7 @@ solana_sdk::pubkeys!(
         "HQJtLqvEGGxgNYfRXUurfxV8E1swvCnsbC3456ik27HY",
         "9xbcBZoGYFnfJZe81EDuDYKUm8xGkjzW8z4EgnVhNvsv",
         "eGPjyaLboZnoDudcMtUBvFCG9zu9VCUqwS1n9ukN8m4", // Mantis mainnet faucet
+        "3qbR1eZRqXUWroWKKYhbDmR3FfqTHfqSU8zZSxtANzYh", // [42u8; 32] public key
     ]
 );
 
