@@ -1101,13 +1101,14 @@ impl JsonRpcRequestProcessor {
                 .map(|pubkey| pubkey.to_string())
                 .collect()
         };
-
+        // HACK: disable non-circulating supply output for RPCs
+        let circulating = total_supply - non_circulating_supply.lamports;
         Ok(new_response(
             &bank,
             RpcSupply {
-                total: total_supply,
-                circulating: total_supply - non_circulating_supply.lamports,
-                non_circulating: non_circulating_supply.lamports,
+                total: circulating,
+                circulating,
+                non_circulating: 0,
                 non_circulating_accounts,
             },
         ))
