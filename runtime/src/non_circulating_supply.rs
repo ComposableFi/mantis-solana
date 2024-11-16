@@ -17,6 +17,8 @@ pub struct NonCirculatingSupply {
 }
 
 pub fn calculate_non_circulating_supply(bank: &Bank) -> ScanResult<NonCirculatingSupply> {
+    // HACK: disable non-circulating supply output for RPCs
+    /*
     debug!("Updating Bank supply, epoch: {}", bank.epoch());
     let mut non_circulating_accounts_set: HashSet<Pubkey> = HashSet::new();
 
@@ -73,11 +75,11 @@ pub fn calculate_non_circulating_supply(bank: &Bank) -> ScanResult<NonCirculatin
         .iter()
         .map(|pubkey| bank.get_balance(pubkey))
         .sum();
-
-    Ok(NonCirculatingSupply {
-        lamports,
-        accounts: non_circulating_accounts_set.into_iter().collect(),
-    })
+    let accounts = non_circulating_accounts_set.into_iter().collect();
+     */
+    let lamports = 0;
+    let accounts = vec![];
+    Ok(NonCirculatingSupply { lamports, accounts })
 }
 
 // Mainnet-beta accounts that should be considered non-circulating
