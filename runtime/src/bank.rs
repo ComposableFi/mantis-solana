@@ -7406,7 +7406,23 @@ impl Bank {
             }
         }
 
-        (FeatureSet { active, inactive }, pending)
+        let mut set = FeatureSet { active, inactive };
+
+        // HACK: disable these features for Mantis mainnet
+        let forced_inactive_features = [
+            feature_set::full_inflation::devnet_and_testnet::id(),
+            feature_set::rent_for_sysvars::id(),
+            feature_set::relax_authority_signer_check_for_lookup_table_creation::id(),
+            feature_set::enable_bpf_loader_set_authority_checked_ix::id(),
+            feature_set::enable_turbine_fanout_experiments::id(),
+            feature_set::disable_rent_fees_collection::id(),
+        ];
+        for feature_id in &forced_inactive_features {
+            info!("Forcing feature {} to be inactive", feature_id);
+            set.deactivate(feature_id);
+        }
+
+        (set, pending)
     }
 
     fn apply_builtin_program_feature_transitions(
