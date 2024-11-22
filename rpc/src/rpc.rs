@@ -1,4 +1,6 @@
 //! The `rpc` module implements the Solana RPC interface.
+
+use spl_token_mantis::state::MintWithRebase;
 use {
     crate::{
         max_slots::MaxSlots, optimistically_confirmed_bank_tracker::OptimisticallyConfirmedBank,
@@ -2055,11 +2057,11 @@ impl JsonRpcRequestProcessor {
                 "Invalid param: not a Token mint".to_string(),
             ));
         }
-        let mint = StateWithExtensions::<Mint>::unpack(mint_account.data()).map_err(|_| {
+        let mint = MintWithRebase::unpack_maybe_not_rebase(mint_account.data()).map_err(|_| {
             Error::invalid_params("Invalid param: mint could not be unpacked".to_string())
         })?;
 
-        let supply = token_amount_to_ui_amount(mint.base.supply, mint.base.decimals);
+        let supply = token_amount_to_ui_amount(mint.supply, mint.decimals);
         Ok(new_response(&bank, supply))
     }
 

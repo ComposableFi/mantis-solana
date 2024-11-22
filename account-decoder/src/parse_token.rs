@@ -1,3 +1,4 @@
+use spl_token_mantis::state::MintWithRebase;
 use {
     crate::{
         parse_account_data::{ParsableAccount, ParseAccountError},
@@ -120,6 +121,23 @@ pub fn parse_token(
                 COption::None => None,
             },
             extensions: ui_extensions,
+        }));
+    } else if let Ok(mint) = MintWithRebase::unpack_maybe_not_rebase(data) {
+        return Ok(TokenAccountType::Mint(UiMint {
+            mint_authority: mint
+                .mint_authority
+                .map(Some)
+                .unwrap_or(None)
+                .map(|x| x.to_string()),
+            supply: mint.supply.to_string(),
+            decimals: mint.decimals,
+            is_initialized: mint.is_initialized,
+            freeze_authority: mint
+                .freeze_authority
+                .map(Some)
+                .unwrap_or(None)
+                .map(|x| x.to_string()),
+            extensions: vec![],
         }));
     }
     if data.len() == Multisig::get_packed_len() {

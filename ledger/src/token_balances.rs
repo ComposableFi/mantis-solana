@@ -1,3 +1,4 @@
+use spl_token_mantis::state::MintWithRebase;
 use {
     solana_account_decoder::parse_token::{
         is_known_spl_token_id, token_amount_to_ui_amount, UiTokenAmount,
@@ -27,8 +28,8 @@ fn get_mint_decimals(bank: &Bank, mint: &Pubkey) -> Option<u8> {
             return None;
         }
 
-        let decimals = StateWithExtensions::<Mint>::unpack(mint_account.data())
-            .map(|mint| mint.base.decimals)
+        let decimals = MintWithRebase::unpack_maybe_not_rebase(mint_account.data())
+            .map(|mint| mint.decimals)
             .ok()?;
 
         Some(decimals)

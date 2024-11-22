@@ -408,6 +408,7 @@ spl-instruction-padding = "0.1"
 spl-memo = "5.0"
 spl-pod = "0.3"
 spl-token = "6.0"
+spl-token-mantis = { package = "spl-token", git = "https://github.com/ComposableFi/solana-program-library.git", branch = "mantis" }
 spl-token-2022 = "4.0"
 spl-token-group-interface = "0.3"
 spl-token-metadata-interface = "0.4"

@@ -1,3 +1,4 @@
+use spl_token_mantis::state::MintWithRebase;
 use {
     crate::rpc::account_resolver,
     jsonrpc_core::{Error, Result},
@@ -94,9 +95,9 @@ pub fn get_mint_owner_and_decimals(bank: &Bank, mint: &Pubkey) -> Result<(Pubkey
 }
 
 fn get_mint_decimals(data: &[u8]) -> Result<u8> {
-    StateWithExtensions::<Mint>::unpack(data)
+    MintWithRebase::unpack_maybe_not_rebase(data)
         .map_err(|_| {
             Error::invalid_params("Invalid param: Token mint could not be unpacked".to_string())
         })
-        .map(|mint| mint.base.decimals)
+        .map(|mint| mint.decimals)
 }
