@@ -278,6 +278,7 @@ mod test {
                     decimals: 2,
                     amount: "42".to_string(),
                     ui_amount_string: "0.42".to_string(),
+                    converted_ui_amount: None,
                 },
                 program_id: spl_token::id().to_string(),
             })
@@ -479,6 +480,7 @@ mod test {
                     decimals: 2,
                     amount: "42".to_string(),
                     ui_amount_string: "0.42".to_string(),
+                    converted_ui_amount: None,
                 },
                 program_id: spl_token_2022::id().to_string(),
             })

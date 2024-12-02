@@ -89,6 +89,7 @@ impl From<StoredTokenAmount> for UiTokenAmount {
             decimals,
             amount,
             ui_amount_string,
+            converted_ui_amount: None,
         }
     }
 }

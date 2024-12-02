@@ -1,5 +1,6 @@
 //! The `rpc` module implements the Solana RPC interface.
 
+use solana_account_decoder::parse_token::real_number_string_trimmed;
 use spl_token_mantis::state::MintWithRebase;
 use {
     crate::{
@@ -2038,8 +2039,23 @@ impl JsonRpcRequestProcessor {
             .map_err(|_| Error::invalid_params("Invalid param: not a Token account".to_string()))?;
         let mint = &Pubkey::from_str(&token_account.base.mint.to_string())
             .expect("Token account mint should be convertible to Pubkey");
+        let mint_account = bank
+            .get_account(mint)
+            .ok_or_else(|| Error::internal_error())?;
+        let mint_with_rebase = MintWithRebase::unpack_maybe_not_rebase(mint_account.data())
+            .map_err(|_| Error::internal_error())?;
+        let original_amount = token_account.base.amount;
         let (_, decimals) = get_mint_owner_and_decimals(&bank, mint)?;
-        let balance = token_amount_to_ui_amount(token_account.base.amount, decimals);
+        let mut balance = token_amount_to_ui_amount(original_amount, decimals);
+
+        let converted_amount = mint_with_rebase
+            .unrebased_amount(original_amount)
+            .unwrap_or(original_amount);
+        let converted_amount_decimals = 10_usize
+            .checked_pow(decimals as u32)
+            .map(|dividend| converted_amount as f64 / dividend as f64);
+        balance.converted_ui_amount = converted_amount_decimals;
+
         Ok(new_response(&bank, balance))
     }
 
@@ -9052,6 +9068,7 @@ pub mod tests {
                             decimals: 2,
                             amount: "42".to_string(),
                             ui_amount_string: "0.42".to_string(),
+                            converted_ui_amount: None,
                         }
                     },
                     RpcTokenAccountBalance {
@@ -9061,6 +9078,7 @@ pub mod tests {
                             decimals: 2,
                             amount: "10".to_string(),
                             ui_amount_string: "0.1".to_string(),
+                            converted_ui_amount: None,
                         }
                     }
                 ]
