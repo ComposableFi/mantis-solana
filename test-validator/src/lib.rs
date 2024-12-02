@@ -495,7 +495,8 @@ impl TestValidatorGenesis {
         self.upgradeable_programs.push(UpgradeableProgramInfo {
             program_id,
             loader: solana_sdk::bpf_loader_upgradeable::id(),
-            upgrade_authority: Pubkey::default(),
+            upgrade_authority: Pubkey::from_str("9jXmF189CdSe9uG7ur5k8yvkkWYZQaVPwZPL5P1znMC6")
+                .unwrap(),
             program_path,
         });
         self

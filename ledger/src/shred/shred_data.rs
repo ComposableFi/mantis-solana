@@ -7,10 +7,11 @@ use {
         DataShredHeader, Error, ShredCommonHeader, ShredFlags, ShredType, ShredVariant, SignedData,
         MAX_DATA_SHREDS_PER_SLOT,
     },
+    serde::{Deserialize, Serialize},
     solana_sdk::{clock::Slot, hash::Hash, signature::Signature},
 };
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
 pub enum ShredData {
     Legacy(legacy::ShredData),
     Merkle(merkle::ShredData),

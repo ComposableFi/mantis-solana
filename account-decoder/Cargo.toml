@@ -22,6 +22,7 @@ serde_json = { workspace = true }
 solana-config-program = { workspace = true }
 solana-sdk = { workspace = true }
 spl-token = { workspace = true, features = ["no-entrypoint"] }
+spl-token-mantis = { workspace = true, features = ["no-entrypoint"] }
 spl-token-2022 = { workspace = true, features = ["no-entrypoint"] }
 spl-token-group-interface = { workspace = true }
 spl-token-metadata-interface = { workspace = true }

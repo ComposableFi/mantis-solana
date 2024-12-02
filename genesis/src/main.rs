@@ -1,6 +1,7 @@
 //! A command-line executable for generating the chain's genesis config.
 #![allow(clippy::arithmetic_side_effects)]
 
+use solana_accounts_db::inline_spl_token;
 use {
     base64::{prelude::BASE64_STANDARD, Engine},
     clap::{crate_description, crate_name, value_t, value_t_or_exit, App, Arg, ArgMatches},
@@ -404,12 +405,12 @@ fn main() -> Result<(), Box<dyn error::Error>> {
     let ledger_path = PathBuf::from(matches.value_of("ledger_path").unwrap());
 
     let rent = Rent {
-        // lamports_per_byte_year: value_t_or_exit!(matches, "lamports_per_byte_year", u64),
-        // exemption_threshold: value_t_or_exit!(matches, "rent_exemption_threshold", f64),
-        // burn_percent: value_t_or_exit!(matches, "rent_burn_percentage", u8),
-        lamports_per_byte_year: 0,
-        exemption_threshold: 0.0,
-        burn_percent: 0,
+        lamports_per_byte_year: value_t_or_exit!(matches, "lamports_per_byte_year", u64),
+        exemption_threshold: value_t_or_exit!(matches, "rent_exemption_threshold", f64),
+        burn_percent: value_t_or_exit!(matches, "rent_burn_percentage", u8),
+        // lamports_per_byte_year: 0,
+        // exemption_threshold: 0.0,
+        // burn_percent: 0,
     };
 
     fn rent_exempt_check(matches: &ArgMatches<'_>, name: &str, exempt: u64) -> io::Result<u64> {
@@ -456,22 +457,22 @@ fn main() -> Result<(), Box<dyn error::Error>> {
     let faucet_pubkey = pubkey_of(&matches, "faucet_pubkey");
 
     // let ticks_per_slot = value_t_or_exit!(matches, "ticks_per_slot", u64);
-    let ticks_per_slot = 16; // 1024
+    let ticks_per_slot = 64; // 1024
 
-    // let mut fee_rate_governor = FeeRateGovernor::new(
-    //     value_t_or_exit!(matches, "target_lamports_per_signature", u64),
-    //     value_t_or_exit!(matches, "target_signatures_per_slot", u64),
-    // );
-    // fee_rate_governor.burn_percent = value_t_or_exit!(matches, "fee_burn_percentage", u8);
+    let mut fee_rate_governor = FeeRateGovernor::new(
+        value_t_or_exit!(matches, "target_lamports_per_signature", u64),
+        value_t_or_exit!(matches, "target_signatures_per_slot", u64),
+    );
+    fee_rate_governor.burn_percent = value_t_or_exit!(matches, "fee_burn_percentage", u8);
 
-    let fee_rate_governor = FeeRateGovernor {
-        lamports_per_signature: 0,
-        target_lamports_per_signature: 0,
-        target_signatures_per_slot: 0,
-        min_lamports_per_signature: 0,
-        max_lamports_per_signature: 0,
-        burn_percent: 0,
-    };
+    // let fee_rate_governor = FeeRateGovernor {
+    //     lamports_per_signature: 0,
+    //     target_lamports_per_signature: 0,
+    //     target_signatures_per_slot: 0,
+    //     min_lamports_per_signature: 0,
+    //     max_lamports_per_signature: 0,
+    //     burn_percent: 0,
+    // };
 
     let mut poh_config = PohConfig {
         target_tick_duration: if matches.is_present("target_tick_duration") {
@@ -638,7 +639,10 @@ fn main() -> Result<(), Box<dyn error::Error>> {
             genesis_config.add_account(
                 address,
                 AccountSharedData::from(Account {
-                    lamports: genesis_config.rent.minimum_balance(program_data.len()),
+                    lamports: genesis_config
+                        .rent
+                        .minimum_balance(program_data.len())
+                        .max(1),
                     data: program_data,
                     executable: true,
                     owner: loader,
@@ -704,6 +708,15 @@ fn main() -> Result<(), Box<dyn error::Error>> {
         }
     }
 
+    let native_mint_account = solana_sdk::account::AccountSharedData::from(Account {
+        owner: inline_spl_token::id(),
+        data: inline_spl_token::native_mint::ACCOUNT_DATA.to_vec(),
+        lamports: sol_to_lamports(1.),
+        executable: false,
+        rent_epoch: 1,
+    });
+    genesis_config.add_account(inline_spl_token::native_mint::id(), native_mint_account);
+
     solana_logger::setup();
     create_new_ledger(
         &ledger_path,
@@ -712,7 +725,6 @@ fn main() -> Result<(), Box<dyn error::Error>> {
         LedgerColumnOptions::default(),
     )?;
 
-    println!("{genesis_config}");
     Ok(())
 }
 

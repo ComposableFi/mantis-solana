@@ -82,7 +82,7 @@ pub use {
 
 mod common;
 mod legacy;
-mod merkle;
+pub mod merkle;
 pub mod shred_code;
 mod shred_data;
 mod stats;
@@ -216,7 +216,7 @@ enum ShredVariant {
 
 /// A common header that is present in data and code shred headers
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize, Serialize)]
-struct ShredCommonHeader {
+pub struct ShredCommonHeader {
     signature: Signature,
     shred_variant: ShredVariant,
     slot: Slot,
@@ -241,7 +241,7 @@ struct CodingShredHeader {
     position: u16, // [0..num_coding_shreds)
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
 pub enum Shred {
     ShredCode(ShredCode),
     ShredData(ShredData),
@@ -263,7 +263,7 @@ impl<'a> AsRef<[u8]> for SignedData<'a> {
 }
 
 /// Tuple which uniquely identifies a shred should it exists.
-#[derive(Clone, Copy, Eq, Debug, Hash, PartialEq)]
+#[derive(Clone, Copy, Eq, Debug, Hash, PartialEq, Deserialize, Serialize)]
 pub struct ShredId(Slot, /*shred index:*/ u32, ShredType);
 
 impl ShredId {
@@ -307,6 +307,7 @@ impl ErasureSetId {
     }
 }
 
+#[macro_export]
 macro_rules! dispatch {
     ($vis:vis fn $name:ident(&self $(, $arg:ident : $ty:ty)?) $(-> $out:ty)?) => {
         #[inline]
@@ -337,7 +338,7 @@ macro_rules! dispatch {
     }
 }
 
-use dispatch;
+pub use dispatch;
 
 impl Shred {
     dispatch!(fn common_header(&self) -> &ShredCommonHeader);
@@ -557,14 +558,14 @@ impl Shred {
         }
     }
 
-    pub(crate) fn num_data_shreds(&self) -> Result<u16, Error> {
+    pub fn num_data_shreds(&self) -> Result<u16, Error> {
         match self {
             Self::ShredCode(shred) => Ok(shred.num_data_shreds()),
             Self::ShredData(_) => Err(Error::InvalidShredType),
         }
     }
 
-    pub(crate) fn num_coding_shreds(&self) -> Result<u16, Error> {
+    pub fn num_coding_shreds(&self) -> Result<u16, Error> {
         match self {
             Self::ShredCode(shred) => Ok(shred.num_coding_shreds()),
             Self::ShredData(_) => Err(Error::InvalidShredType),

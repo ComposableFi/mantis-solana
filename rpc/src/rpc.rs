@@ -1,4 +1,7 @@
 //! The `rpc` module implements the Solana RPC interface.
+
+use solana_account_decoder::parse_token::real_number_string_trimmed;
+use spl_token_mantis::state::MintWithRebase;
 use {
     crate::{
         max_slots::MaxSlots, optimistically_confirmed_bank_tracker::OptimisticallyConfirmedBank,
@@ -7,8 +10,10 @@ use {
     base64::{prelude::BASE64_STANDARD, Engine},
     bincode::{config::Options, serialize},
     crossbeam_channel::{unbounded, Receiver, Sender},
+    itertools::Itertools,
     jsonrpc_core::{futures::future, types::error, BoxFuture, Error, Metadata, Result},
     jsonrpc_derive::rpc,
+    solana_account_decoder::{parse_stake::StakeAccountType, UiAccountData},
     solana_account_decoder::{
         parse_token::{is_known_spl_token_id, token_amount_to_ui_amount, UiTokenAmount},
         UiAccount, UiAccountEncoding, UiDataSliceConfig, MAX_BASE58_BYTES,
@@ -23,6 +28,7 @@ use {
     solana_entry::entry::Entry,
     solana_faucet::faucet::request_airdrop_transaction,
     solana_gossip::{cluster_info::ClusterInfo, contact_info::ContactInfo},
+    solana_ledger::shred::Shred,
     solana_ledger::{
         blockstore::{Blockstore, SignatureInfosForAddress},
         blockstore_db::BlockstoreError,
@@ -56,6 +62,7 @@ use {
         snapshot_config::SnapshotConfig,
         snapshot_utils,
     },
+    solana_sdk::message::AccountKeys,
     solana_sdk::{
         account::{AccountSharedData, ReadableAccount},
         account_utils::StateMut,
@@ -92,6 +99,7 @@ use {
         EncodedConfirmedTransactionWithStatusMeta, Reward, RewardType, TransactionBinaryEncoding,
         TransactionConfirmationStatus, TransactionStatus, UiConfirmedBlock, UiTransactionEncoding,
     },
+    solana_transaction_status::{BlockHeader, EncodedTransaction, UiInstruction},
     solana_vote_program::vote_state::{VoteState, MAX_LOCKOUT_HISTORY},
     spl_token_2022::{
         extension::StateWithExtensions,
@@ -448,6 +456,182 @@ impl JsonRpcRequestProcessor {
 
         let response = get_encoded_account(&bank, pubkey, encoding, data_slice, None)?;
         Ok(new_response(&bank, response))
+    }
+
+    pub async fn get_block_headers(
+        &self,
+        slot: Slot,
+        config: Option<RpcEncodingConfigWrapper<RpcBlockConfig>>,
+    ) -> Result<BlockHeader> {
+        const VOTE_PROGRAM_ID: &str = "Vote111111111111111111111111111111111111111";
+        let block = self.get_block(slot, config).await;
+        let mut block_header: BlockHeader = BlockHeader::default();
+
+        for outer_txn in block.unwrap().unwrap().transactions.unwrap() {
+            match outer_txn.transaction {
+                EncodedTransaction::Json(inner_txn) => {
+                    match inner_txn.message {
+                        solana_transaction_status::UiMessage::Parsed(message) => {
+                            let aks = message
+                                .account_keys
+                                .clone()
+                                .into_iter()
+                                .map(|key| key.pubkey)
+                                .collect_vec();
+                            if aks.contains(&VOTE_PROGRAM_ID.to_string()) {
+                                let vote_signature = Some(inner_txn.signatures[0].clone());
+                                let validator_identity;
+                                let mut validator_stake = None;
+
+                                let ixdata = message.instructions[0].clone();
+
+                                match ixdata {
+                                    UiInstruction::Parsed(_ixc) => {
+                                        let static_keys = message
+                                            .account_keys
+                                            .clone()
+                                            .into_iter()
+                                            .map(|k| Pubkey::from_str(&k.pubkey.as_str()).unwrap())
+                                            .collect::<Vec<Pubkey>>();
+                                        let _acc_keys = AccountKeys::new(&static_keys, None);
+
+                                        validator_identity =
+                                            Some(message.account_keys.get(0).unwrap());
+                                        let stake_account = self.get_account_info(
+                                            &Pubkey::from_str(
+                                                message.account_keys[1].pubkey.as_str(),
+                                            )
+                                            .unwrap(),
+                                            Some(RpcAccountInfoConfig {
+                                                encoding: Some(UiAccountEncoding::JsonParsed),
+                                                data_slice: None,
+                                                commitment: None,
+                                                min_context_slot: Some(1),
+                                            }), // Seems like we have to pass a config here instead of a None
+                                        );
+                                        // Error is returned here:==> stakeacc Err(Error { code: InvalidRequest, message: "Encoded binary (base 58) data should be less than 128 bytes, please use Base64 encoding.", data: None })
+                                        // Passing the Base64 config works ig?
+                                        let _stake_acc = stake_account.unwrap().value.unwrap().data;
+                                        let get_all_stake_accs = self.get_program_accounts(
+                                            &Pubkey::from_str(
+                                                &"Stake11111111111111111111111111111111111111",
+                                            )
+                                            .unwrap(),
+                                            Some(RpcAccountInfoConfig {
+                                                encoding: Some(UiAccountEncoding::JsonParsed),
+                                                data_slice: None,
+                                                commitment: None,
+                                                min_context_slot: Some(1),
+                                            }),
+                                            vec![],
+                                            false,
+                                        );
+                                        let stakes = get_all_stake_accs.unwrap();
+                                        if let OptionalContext::NoContext(stks) = stakes {
+                                            for stk in stks {
+                                                if let UiAccountData::Json(stka) = stk.account.data
+                                                {
+                                                    let p: StakeAccountType =
+                                                        serde_json::from_value(stka.parsed)
+                                                            .unwrap();
+
+                                                    match p {
+                                                        StakeAccountType::Delegated(dps) => {
+                                                            validator_stake = Some(
+                                                                dps.stake
+                                                                    .unwrap()
+                                                                    .delegation
+                                                                    .stake
+                                                                    .parse::<u64>()
+                                                                    .unwrap(),
+                                                            )
+                                                        }
+                                                        StakeAccountType::Initialized(_ips) => {}
+                                                        _ => {
+                                                            validator_stake = None;
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+
+                                        block_header.validator_identity.push(Some(
+                                            Pubkey::from_str(
+                                                validator_identity.unwrap().pubkey.as_str(),
+                                            )
+                                            .unwrap(),
+                                        ));
+                                        block_header.validator_stake.push(validator_stake);
+                                        block_header.vote_signature.push(vote_signature);
+                                    }
+                                    _ => (),
+                                }
+                            }
+                        }
+                        _ => {
+                            error!("failing here {:?}", inner_txn.message);
+                        }
+                    }
+                }
+                _ => (),
+            };
+        }
+        Ok(block_header)
+    }
+
+    pub async fn get_shreds(
+        &self,
+        slot: Slot,
+        shred_indices: Vec<u64>,
+        config: Option<RpcShredConfig>,
+    ) -> Result<GetShredResponse> {
+        let leader = {
+            let _commitment = if let Some(conf) = config {
+                conf.commitment
+            } else {
+                None
+            };
+            let bank = self.get_bank_with_config(RpcContextConfig {
+                commitment: Some(CommitmentConfig::confirmed()),
+                min_context_slot: Some(slot),
+            })?;
+            bank.collector_id().to_string()
+        };
+
+        let shreds = shred_indices
+            .iter()
+            .map(|i| {
+                let ds = if let Ok(shred) = self.blockstore.get_data_shred(slot, *i) {
+                    if let Some(shred_data) = shred {
+                        if let Ok(serialized_shred) = Shred::new_from_serialized_shred(shred_data) {
+                            Some(serialized_shred)
+                        } else {
+                            None
+                        }
+                    } else {
+                        None
+                    }
+                } else {
+                    None
+                };
+                let cs = if let Ok(shred) = self.blockstore.get_coding_shred(slot, *i) {
+                    if let Some(shred_data) = shred {
+                        if let Ok(serialized_shred) = Shred::new_from_serialized_shred(shred_data) {
+                            Some(serialized_shred)
+                        } else {
+                            None
+                        }
+                    } else {
+                        None
+                    }
+                } else {
+                    None
+                };
+                [ds, cs]
+            })
+            .collect::<Vec<[Option<Shred>; 2]>>();
+        let shreds = shreds.into_iter().flatten().collect::<Vec<_>>();
+        Ok(GetShredResponse { shreds, leader })
     }
 
     pub fn get_multiple_accounts(
@@ -920,13 +1104,14 @@ impl JsonRpcRequestProcessor {
                 .map(|pubkey| pubkey.to_string())
                 .collect()
         };
-
+        // HACK: disable non-circulating supply output for RPCs
+        let circulating = total_supply - non_circulating_supply.lamports;
         Ok(new_response(
             &bank,
             RpcSupply {
-                total: total_supply,
-                circulating: total_supply - non_circulating_supply.lamports,
-                non_circulating: non_circulating_supply.lamports,
+                total: circulating,
+                circulating,
+                non_circulating: 0,
                 non_circulating_accounts,
             },
         ))
@@ -1854,8 +2039,23 @@ impl JsonRpcRequestProcessor {
             .map_err(|_| Error::invalid_params("Invalid param: not a Token account".to_string()))?;
         let mint = &Pubkey::from_str(&token_account.base.mint.to_string())
             .expect("Token account mint should be convertible to Pubkey");
+        let mint_account = bank
+            .get_account(mint)
+            .ok_or_else(|| Error::internal_error())?;
+        let mint_with_rebase = MintWithRebase::unpack_maybe_not_rebase(mint_account.data())
+            .map_err(|_| Error::internal_error())?;
+        let original_amount = token_account.base.amount;
         let (_, decimals) = get_mint_owner_and_decimals(&bank, mint)?;
-        let balance = token_amount_to_ui_amount(token_account.base.amount, decimals);
+        let mut balance = token_amount_to_ui_amount(original_amount, decimals);
+
+        let converted_amount = mint_with_rebase
+            .unrebased_amount(original_amount)
+            .unwrap_or(original_amount);
+        let converted_amount_decimals = 10_usize
+            .checked_pow(decimals as u32)
+            .map(|dividend| converted_amount as f64 / dividend as f64);
+        balance.converted_ui_amount = converted_amount_decimals;
+
         Ok(new_response(&bank, balance))
     }
 
@@ -1873,11 +2073,11 @@ impl JsonRpcRequestProcessor {
                 "Invalid param: not a Token mint".to_string(),
             ));
         }
-        let mint = StateWithExtensions::<Mint>::unpack(mint_account.data()).map_err(|_| {
+        let mint = MintWithRebase::unpack_maybe_not_rebase(mint_account.data()).map_err(|_| {
             Error::invalid_params("Invalid param: mint could not be unpacked".to_string())
         })?;
 
-        let supply = token_amount_to_ui_amount(mint.base.supply, mint.base.decimals);
+        let supply = token_amount_to_ui_amount(mint.supply, mint.decimals);
         Ok(new_response(&bank, supply))
     }
 
@@ -3530,6 +3730,23 @@ pub mod rpc_full {
             slot: Slot,
             config: Option<RpcEncodingConfigWrapper<RpcBlockConfig>>,
         ) -> BoxFuture<Result<Option<UiConfirmedBlock>>>;
+        #[rpc(meta, name = "getBlockHeaders")]
+
+        fn get_block_headers(
+            &self,
+            meta: Self::Metadata,
+            slot: Slot,
+            config: Option<RpcEncodingConfigWrapper<RpcBlockConfig>>,
+        ) -> BoxFuture<Result<BlockHeader>>;
+
+        #[rpc(meta, name = "getShreds")]
+        fn get_shreds(
+            &self,
+            meta: Self::Metadata,
+            slot: Slot,
+            shred_indices: Vec<u64>,
+            config: Option<RpcShredConfig>,
+        ) -> BoxFuture<Result<GetShredResponse>>;
 
         #[rpc(meta, name = "getBlockTime")]
         fn get_block_time(
@@ -4179,6 +4396,27 @@ pub mod rpc_full {
         ) -> BoxFuture<Result<Option<UiConfirmedBlock>>> {
             debug!("get_block rpc request received: {:?}", slot);
             Box::pin(async move { meta.get_block(slot, config).await })
+        }
+
+        fn get_block_headers(
+            &self,
+            meta: Self::Metadata,
+            slot: Slot,
+            config: Option<RpcEncodingConfigWrapper<RpcBlockConfig>>,
+        ) -> BoxFuture<Result<BlockHeader>> {
+            debug!("get_block_headers rpc request received: {:?}", slot);
+            Box::pin(async move { meta.get_block_headers(slot, config).await })
+        }
+
+        fn get_shreds(
+            &self,
+            meta: Self::Metadata,
+            slot: Slot,
+            shred_indices: Vec<u64>,
+            config: Option<RpcShredConfig>,
+        ) -> BoxFuture<Result<GetShredResponse>> {
+            debug!("get_shreds rpc request received: {:?}", slot);
+            Box::pin(async move { meta.get_shreds(slot, shred_indices, config).await })
         }
 
         fn get_blocks(
@@ -5016,6 +5254,7 @@ pub fn populate_blockstore_for_tests(
 
 #[cfg(test)]
 pub mod tests {
+    use spl_token_2022::extension::BaseStateWithExtensionsMut;
     use {
         super::{
             rpc_accounts::*, rpc_accounts_scan::*, rpc_bank::*, rpc_deprecated_v1_9::*,
@@ -7838,6 +8077,30 @@ pub mod tests {
     }
 
     #[test]
+    fn test_get_block_headers() {
+        let server_details = "107.155.66.146:8899";
+        let faucet_addr: SocketAddr = server_details
+            .parse()
+            .expect("Unable to parse socket address");
+        let config = JsonRpcConfig {
+            faucet_addr: Some(faucet_addr),
+            enable_rpc_transaction_history: true,
+            ..JsonRpcConfig::default_for_test()
+        };
+        let rpc = RpcHandler::start_with_config(config);
+        // let confirmed_block_signatures = rpc.create_test_transactions_and_populate_blockstore();
+        println!("pre req {:?}", rpc.blockstore.highest_slot());
+        let request = create_test_request("getBlockHeaders", Some(json!([100])));
+        // println!("res {:?}", result);
+        let req = rpc.handle_request_sync(request);
+        // println!("req {:?}", req);
+        let result: Option<Vec<BlockHeader>> = parse_success_result(req);
+        println!("res {:?}", result);
+        let confirmed_block = result.unwrap();
+        println!("{:?}", confirmed_block);
+    }
+
+    #[test]
     fn test_get_block_config() {
         let rpc = RpcHandler::start();
         let confirmed_block_signatures = rpc.create_test_transactions_and_populate_blockstore();
@@ -8805,6 +9068,7 @@ pub mod tests {
                             decimals: 2,
                             amount: "42".to_string(),
                             ui_amount_string: "0.42".to_string(),
+                            converted_ui_amount: None,
                         }
                     },
                     RpcTokenAccountBalance {
@@ -8814,6 +9078,7 @@ pub mod tests {
                             decimals: 2,
                             amount: "10".to_string(),
                             ui_amount_string: "0.1".to_string(),
+                            converted_ui_amount: None,
                         }
                     }
                 ]

@@ -1,3 +1,4 @@
+use spl_token_mantis::state::MintWithRebase;
 use {
     crate::{
         parse_account_data::{ParsableAccount, ParseAccountError},
@@ -121,6 +122,23 @@ pub fn parse_token(
             },
             extensions: ui_extensions,
         }));
+    } else if let Ok(mint) = MintWithRebase::unpack_maybe_not_rebase(data) {
+        return Ok(TokenAccountType::Mint(UiMint {
+            mint_authority: mint
+                .mint_authority
+                .map(Some)
+                .unwrap_or(None)
+                .map(|x| x.to_string()),
+            supply: mint.supply.to_string(),
+            decimals: mint.decimals,
+            is_initialized: mint.is_initialized,
+            freeze_authority: mint
+                .freeze_authority
+                .map(Some)
+                .unwrap_or(None)
+                .map(|x| x.to_string()),
+            extensions: vec![],
+        }));
     }
     if data.len() == Multisig::get_packed_len() {
         let multisig = Multisig::unpack(data)
@@ -224,6 +242,8 @@ pub struct UiTokenAmount {
     pub decimals: u8,
     pub amount: StringAmount,
     pub ui_amount_string: StringDecimals,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub converted_ui_amount: Option<f64>,
 }
 
 impl UiTokenAmount {
@@ -255,6 +275,7 @@ pub fn token_amount_to_ui_amount(amount: u64, decimals: u8) -> UiTokenAmount {
         decimals,
         amount: amount.to_string(),
         ui_amount_string: real_number_string_trimmed(amount, decimals),
+        converted_ui_amount: None,
     }
 }
 
@@ -287,6 +308,7 @@ pub fn get_token_account_mint(data: &[u8]) -> Option<Pubkey> {
 
 #[cfg(test)]
 mod test {
+    use spl_token_2022::extension::BaseStateWithExtensionsMut;
     use {
         super::*,
         crate::parse_token_extension::{UiMemoTransfer, UiMintCloseAuthority},
@@ -321,7 +343,8 @@ mod test {
                     ui_amount: Some(0.42),
                     decimals: 2,
                     amount: "42".to_string(),
-                    ui_amount_string: "0.42".to_string()
+                    ui_amount_string: "0.42".to_string(),
+                    converted_ui_amount: None,
                 },
                 delegate: None,
                 state: UiAccountState::Initialized,
@@ -527,7 +550,8 @@ mod test {
                     ui_amount: Some(0.42),
                     decimals: 2,
                     amount: "42".to_string(),
-                    ui_amount_string: "0.42".to_string()
+                    ui_amount_string: "0.42".to_string(),
+                    converted_ui_amount: None,
                 },
                 delegate: None,
                 state: UiAccountState::Initialized,
@@ -563,7 +587,8 @@ mod test {
                     ui_amount: Some(0.42),
                     decimals: 2,
                     amount: "42".to_string(),
-                    ui_amount_string: "0.42".to_string()
+                    ui_amount_string: "0.42".to_string(),
+                    converted_ui_amount: None,
                 },
                 delegate: None,
                 state: UiAccountState::Initialized,

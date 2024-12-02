@@ -73,11 +73,8 @@ pub fn calculate_non_circulating_supply(bank: &Bank) -> ScanResult<NonCirculatin
         .iter()
         .map(|pubkey| bank.get_balance(pubkey))
         .sum();
-
-    Ok(NonCirculatingSupply {
-        lamports,
-        accounts: non_circulating_accounts_set.into_iter().collect(),
-    })
+    let accounts = non_circulating_accounts_set.into_iter().collect();
+    Ok(NonCirculatingSupply { lamports, accounts })
 }
 
 // Mainnet-beta accounts that should be considered non-circulating
@@ -194,6 +191,8 @@ solana_sdk::pubkeys!(
         "CY7X5o3Wi2eQhTocLmUS6JSWyx1NinBfW7AXRrkRCpi8",
         "HQJtLqvEGGxgNYfRXUurfxV8E1swvCnsbC3456ik27HY",
         "9xbcBZoGYFnfJZe81EDuDYKUm8xGkjzW8z4EgnVhNvsv",
+        "eGPjyaLboZnoDudcMtUBvFCG9zu9VCUqwS1n9ukN8m4", // Mantis mainnet faucet
+        "3qbR1eZRqXUWroWKKYhbDmR3FfqTHfqSU8zZSxtANzYh", // [42u8; 32] public key
     ]
 );
 

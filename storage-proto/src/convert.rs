@@ -596,6 +596,7 @@ impl From<generated::TokenBalance> for TransactionTokenBalance {
                         ui_token_amount.decimals as u8,
                     )
                 },
+                converted_ui_amount: None,
             },
             owner: value.owner,
             program_id: value.program_id,
